@@ -32,6 +32,7 @@
 //   delay(200);
 // }
 
+
 /*
 * start mode: leds are off, middle color leds are white. Both players hold button to start the game, at which the controller leds count down 3 2 1
 - pins start at 0
@@ -56,10 +57,13 @@ int fadeAmount = 5; // Rate of brightness change
 
 void setup() {
   Serial.begin(9600);
+  Serial.println("Hi");
   pinMode(ledPin, OUTPUT); // Set the LED pin as an output
 }
 
 void loop() {
+  Serial.println("Button: ");
+
   analogWrite(ledPin, brightness); // Set the LED brightness
 
   brightness = brightness + fadeAmount; // Increase brightness

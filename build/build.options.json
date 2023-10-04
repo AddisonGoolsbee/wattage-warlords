@@ -1,0 +1,11 @@
+{
+  "additionalFiles": "",
+  "builtInToolsFolders": "",
+  "compiler.optimization_flags": "-Os",
+  "customBuildProperties": "",
+  "fqbn": "esp32:esp32:esp32:JTAGAdapter=default,PSRAM=disabled,PartitionScheme=default,CPUFreq=240,FlashMode=qio,FlashFreq=80,FlashSize=4M,UploadSpeed=921600,LoopCore=1,EventsCore=1,DebugLevel=none,EraseFlash=none",
+  "hardwareFolders": "/Users/addisongoolsbee/Library/Arduino15/packages",
+  "otherLibrariesFolders": "/Users/addisongoolsbee/Documents/Arduino/libraries",
+  "runtime.ide.version": "10607",
+  "sketchLocation": "/Users/addisongoolsbee/Desktop/class/CPSC-334/interactiveDevices/led-game"
+}
