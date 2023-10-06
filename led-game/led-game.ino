@@ -249,16 +249,16 @@ bool getDigitalInput(int pin, int player) {
 
 void handleButton(){
   if (buttonP1.debounce()) {
-    // Serial.print("P1 button ");
-    // Serial.println(scoreP1);
-    scoreP1 += P1_multiplier;
+    Serial.print("P1 button ");
+    Serial.println(scoreP1);
+    scoreP1 = max(scoreP1 + P1_multiplier, 0);
     setCharge(1);
   } 
 
   if (buttonP2.debounce()) {
-    // Serial.print("P2 button ");
-    // Serial.println(scoreP2);
-    scoreP2 += P2_multiplier;
+    Serial.print("P2 button ");
+    Serial.println(scoreP2);
+    scoreP2 = max(scoreP2 + P2_multiplier, 0);
     setCharge(2);
   } 
 
@@ -429,6 +429,8 @@ void checkMatches(){
   else {
     P2_multiplier = 1;
   }
+  P1_multiplier = 1;
+  P2_multiplier = 1;
 }
 
 void setup() {
