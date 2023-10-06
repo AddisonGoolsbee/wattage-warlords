@@ -421,16 +421,23 @@ void checkMatches(){
 void setup() {
   Serial.begin(9600);
   Serial.println("Starting up...");
+
   pinMode(P1_BUTTON, INPUT_PULLUP);
   pinMode(P2_BUTTON, INPUT_PULLUP);
+
   pinMode(P1_GREEN_1, OUTPUT);
   pinMode(P1_GREEN_2, OUTPUT);
-  pinMode(P1_GREEN_2, OUTPUT);
+  pinMode(P1_GREEN_3, OUTPUT);
+  pinMode(P2_GREEN_1, OUTPUT);
+  pinMode(P2_GREEN_2, OUTPUT);
+  pinMode(P2_GREEN_3, OUTPUT);
+
   pinMode(C_RGB_R, OUTPUT);
   pinMode(C_RGB_B, OUTPUT);
   pinMode(P1_RGB_R, OUTPUT);
   pinMode(P1_RGB_B, OUTPUT);
   pinMode(C_SWITCH, OUTPUT);
+  
   analogWrite(C_RGB_R, C_RGB_R_val);
   analogWrite(C_RGB_B, C_RGB_B_val);
   digitalWrite(C_SWITCH, C_SWITCH_val);
