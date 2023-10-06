@@ -92,6 +92,7 @@ const int P2_GREEN_3 = 15; // GPIO15
 
 const int DEBOUNCE_TIME = 200;
 const int SCORE_MAX = 192;
+const int LED_MAX = SCORE_MAX / 3;
 const int ANIMATION_DURATION = 20;
 
 int P1_RGB_B_val = 0;
@@ -108,13 +109,13 @@ bool P2_W_matched = true;
 int P1_multiplier = 1;
 int P2_multiplier = 1;
 
-int LED_MAX = SCORE_MAX / 3;
-
 int scoreP1 = 0;
 int scoreP2 = 0;
 
-bool animationInProgress = false;
-unsigned long animationStartTime = 0;
+bool animationInProgressP1 = false;
+unsigned long animationStartTimeP1 = 0;
+bool animationInProgressP2 = false;
+unsigned long animationStartTimeP2 = 0;
 
 int winner = 0;
 
@@ -201,8 +202,8 @@ void setCharge(int player) {
   int score = getScore(player);
   int pin = getPin(player);
 
-  animationInProgress = true;
-  animationStartTime = esp_timer_get_time();
+  player == 1 ? animationInProgressP1 : animationInProgressP2 = true;
+  player == 1 ? animationStartTimeP1 : animationStartTimeP2 = esp_timer_get_time();
   analogWrite(pin, 0);
 
   int fullScore = player == 1 ? scoreP1 : scoreP2;
@@ -215,11 +216,11 @@ void flashLED(int player) {
   int pin = getPin(player);
   int score = getScore(player);
 
-  if (animationInProgress) {
+  if (player == 1 ? animationInProgressP1 : animationInProgressP2) {
     unsigned long currentTime = esp_timer_get_time();
-    int time = (currentTime - animationStartTime) / 1000;
+    int time = (currentTime - player == 1 ? animationInProgressP1 : animationStartTimeP2) / 1000;
     if (time > ANIMATION_DURATION) {
-      animationInProgress = false;
+      (player == 1 ? animationInProgressP1 : animationInProgressP2) = false;
       analogWrite(pin, score * 4);
     }
   }
