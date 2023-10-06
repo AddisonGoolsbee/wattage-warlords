@@ -455,9 +455,6 @@ void loop() {
   unsigned long currentMillis = millis();
   randomActions(currentMillis);
 
-  // print out the value you read:
-  Serial.println(P1_SWITCH_val);
-
   if (winner) {
     gameFinish();
   }
