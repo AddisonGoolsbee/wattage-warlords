@@ -1,4 +1,32 @@
 /*
+
+P1 Button @ GPIO23/23
+P2 Button @ GPIO22/22
+P1 Switch @ GPIO17/17
+P2 Switch @ GPIO16/16
+P1 White @ GPIO21/21
+P2 White @ GPIO19/19
+C White @ GPIO18/18
+P1 VRX @ GPIO36/VP
+P1 VRY @ GPIO39/VN
+P2 VRX @ GPIO34/34
+P2 VRY @ GPIO35/35
+C RGB R + ~68ohm @ GPIO32/32
+C RGB G + ~1kohm @ GPIO33/33
+P1 RGB R + ~68ohm @ GPIO25/25
+P1 RGB G + ~1kohm @ GPIO26/26
+P2 RGB R + ~68ohm @ GPIO27/27
+P2 RGB G + ~1kohm @ GPIO14/14
+P1 Green 1 @ GPIO12/12
+P1 Green 2 @ GPIO13/13
+P1 Green 3 @ GPIO4/4
+P1 Green 1 @ GPIO0/0
+P1 Green 2 @ GPIO2/2
+P1 Green 3 @ GPIO15/15
+
+P
+*/
+/*
 TODO
 
 x pins start at 0, just one player to start
@@ -24,23 +52,62 @@ b sometimes when switching to the next led, the previous one turns off
 
 */
 
-#define BUTTON_PIN_P1 21
-#define BUTTON_PIN_P2 -1
+const int P1_BUTTON = 23; // GPIO23
+const int P2_BUTTON = 22; // GPIO22
 
-#define CHARGE_PIN_P1_1 32
-#define CHARGE_PIN_P1_2 33
-#define CHARGE_PIN_P1_3 25
+// Switches
+const int P1_SWITCH = 17; // GPIO17
+const int P2_SWITCH = 16; // GPIO16
 
-#define CHARGE_PIN_P2_1 -1
-#define CHARGE_PIN_P2_2 -1
-#define CHARGE_PIN_P2_3 -1
+// White LEDs
+const int P1_WHITE = 21; // GPIO21
+const int P2_WHITE = 19; // GPIO19
+const int C_WHITE = 18;  // GPIO18
 
-#define DEBOUNCE_TIME 200
-#define SCORE_MAX 192
-#define ANIMATION_DURATION 20
+// VRX and VRY for Joysticks
+// -VRX = deltaY
+// -VRY = deltaX
+// 5V to 3.3V
+const int P1_VRX = 36; // GPIO36/VP
+const int P1_VRY = 39; // GPIO39/VN
+const int P2_VRX = 34; // GPIO34
+const int P2_VRY = 35; // GPIO35
+
+// RGB LEDs
+const int C_RGB_R = 32; // GPIO32 with ~68ohm resistor
+const int C_RGB_B = 33; // GPIO33 with ~1kohm resistor
+const int P1_RGB_R = 25; // GPIO25 with ~68ohm resistor
+const int P1_RGB_B = 26; // GPIO26 with ~1kohm resistor
+const int P2_RGB_R = 27; // GPIO27 with ~68ohm resistor
+const int P2_RGB_B = 14; // GPIO14 with ~1kohm resistor
+
+// Green LEDs for Player 1
+const int P1_GREEN_1 = 12; // GPIO12
+const int P1_GREEN_2 = 13; // GPIO13
+const int P1_GREEN_3 = 4;  // GPIO4
+const int P2_GREEN_1 = 0;  // GPIO0
+const int P2_GREEN_2 = 2;  // GPIO2
+const int P2_GREEN_3 = 15; // GPIO15
+
+const int DEBOUNCE_TIME = 200;
+const int SCORE_MAX = 192;
+const int ANIMATION_DURATION = 20;
+
+int P1_RGB_B_val = 0;
+int P1_RGB_R_val = 0;
+int C_RGB_R_val = 255;
+int C_RGB_B_val = 255;
+unsigned long previousMillis = 0;
+long interval_RGB = random(8000, 15001);  // Random interval between 8 and 15 seconds
+bool P1_RGB_matched = true;
+bool P2_RGB_matched = true;
+bool P1_W_matched = true;
+bool P2_W_matched = true;
+
+int P1_multiplier = 1;
+int P2_multiplier = 1;
 
 int LED_MAX = SCORE_MAX / 3;
-
 
 int scoreP1 = 0;
 int scoreP2 = 0;
@@ -66,10 +133,9 @@ unsigned long animationStartTime = 0;
 
 int winner = 0;
 
-
 void handleButton(int player){
   if (player == 1){
-     currentStateP1 = digitalRead(BUTTON_PIN_P1);
+     currentStateP1 = digitalRead(P1_BUTTON);
 
     if (currentStateP1 != lastFlickerableStateP1) {
       lastDebounceTimeP1 = esp_timer_get_time();
@@ -87,7 +153,7 @@ void handleButton(int player){
     }
     lastStateP1 = currentStateP1;
   } else {
-    currentStateP2 = digitalRead(BUTTON_PIN_P2);
+    currentStateP2 = digitalRead(P2_BUTTON);
 
     if (currentStateP2 != lastFlickerableStateP2) {
       lastDebounceTimeP2 = esp_timer_get_time();
@@ -119,13 +185,13 @@ int getScore(int player) {
 int* getPins(int player) {
   int* pins = (int*) malloc(3 * sizeof(int));
   if (player == 1) {
-      pins[0] = CHARGE_PIN_P1_1;
-      pins[1] = CHARGE_PIN_P1_2;
-      pins[2] = CHARGE_PIN_P1_3;
+      pins[0] = P1_GREEN_1;
+      pins[1] = P1_GREEN_2;
+      pins[2] = P1_GREEN_3;
   } else {
-      pins[0] = CHARGE_PIN_P2_1;
-      pins[1] = CHARGE_PIN_P2_2;
-      pins[2] = CHARGE_PIN_P2_3;
+      pins[0] = P2_GREEN_1;
+      pins[1] = P2_GREEN_2;
+      pins[2] = P2_GREEN_3;
   }
   return pins;
 }
@@ -136,12 +202,12 @@ int getPin(int player) {
 
   if (score > LED_MAX * 2) {
     score = score - (LED_MAX * 2);
-    pin = player == 1 ? CHARGE_PIN_P1_3 : CHARGE_PIN_P2_3;
+    pin = player == 1 ? P1_GREEN_3 : P2_GREEN_3;
   } else if (score > LED_MAX) {
     score = score - LED_MAX;
-    pin = player == 1 ? CHARGE_PIN_P1_2 : CHARGE_PIN_P2_2;
+    pin = player == 1 ? P1_GREEN_2 : P1_GREEN_2;
   } else {
-    pin = player == 1 ? CHARGE_PIN_P1_1 : CHARGE_PIN_P2_1;
+    pin = player == 1 ? P1_GREEN_1 : P2_GREEN_1;
   }
   return pin;
 }
@@ -196,15 +262,92 @@ void gameFinish(){
 void setup() {
   Serial.begin(9600);
   Serial.println("Starting up...");
-  pinMode(BUTTON_PIN_P1, INPUT_PULLUP);
-  pinMode(CHARGE_PIN_P1_1, OUTPUT);
-  pinMode(CHARGE_PIN_P1_2, OUTPUT);
-  pinMode(CHARGE_PIN_P1_3, OUTPUT);
+  pinMode(P1_BUTTON, INPUT_PULLUP);
+  pinMode(P1_GREEN_1, OUTPUT);
+  pinMode(P1_GREEN_2, OUTPUT);
+  pinMode(P1_GREEN_2, OUTPUT);
+  pinMode(C_RGB_R, OUTPUT);
+  pinMode(C_RGB_B, OUTPUT);
+  pinMode(P1_RGB_R, OUTPUT);
+  pinMode(P1_RGB_B, OUTPUT);
+  analogWrite(C_RGB_R, C_RGB_R_val);
+  analogWrite(C_RGB_B, C_RGB_B_val);
 }
 
 void loop() {
   handleButton(1);
   flashLED(1);
+
+  
+  // read the input on analog pin P1_GREEN_1:
+  int P1_VRX_val = analogRead(P2_VRX);
+  int P1_VRY_val = analogRead(P2_VRY);
+
+  if (P1_RGB_B_val != 0 && P1_VRX_val == 4095) { 
+      P1_RGB_B_val -= 1;  // remove 1 from P1_RGB_B_val
+    }
+  else if (P1_RGB_B_val != 255 && P1_VRX_val == 0) {
+      P1_RGB_B_val += 1;  // add 1 to P1_RGB_B_val
+    }
+
+  if (P1_RGB_R_val != 0 && P1_VRY_val == 4095) { 
+      P1_RGB_R_val -= 1;  // remove 1 from P1_RGB_R_val
+    }
+  else if (P1_RGB_R_val != 255 && P1_VRY_val == 0) {
+      P1_RGB_R_val += 1;  // add 1 to P1_RGB_R_val
+    }
+
+  unsigned long currentMillis = millis();
+  
+  if (currentMillis - previousMillis >= interval_RGB) {
+    previousMillis = currentMillis;
+
+    // Update C_RGB_R_val
+    int new_val = random(0, 256);
+    while (abs(new_val - C_RGB_R_val) < 50) {  // Ensure new value is sufficiently different
+      new_val = random(0, 256);
+    }
+    C_RGB_R_val = new_val;
+    analogWrite(C_RGB_R, C_RGB_R_val);
+
+    // Update C_RGB_B_val
+    new_val = random(0, 256);
+    while (abs(new_val - C_RGB_B_val) < 50) {  // Ensure new value is sufficiently different
+      new_val = random(0, 256);
+    }
+    C_RGB_B_val = new_val;
+    analogWrite(C_RGB_B, C_RGB_B_val);
+
+    interval_RGB = random(8000, 15001);
+  }
+
+  if (P1_RGB_R_val > (C_RGB_R_val + 49) || P1_RGB_R_val < (C_RGB_B_val - 49)) {
+    P1_RGB_matched = false;
+  }
+  else {
+    P1_RGB_matched = true;
+  }
+
+  if (P1_W_matched == false && P1_RGB_matched == false) {
+    P1_multiplier = -2;
+  }
+  else if (P1_W_matched == false || P1_RGB_matched == false) {
+    P1_multiplier = -1;
+  }
+  else {
+    P1_multiplier = 1;
+  }
+
+  // print out the value you read:
+  Serial.print(P1_RGB_R_val);
+  Serial.print(',');
+  Serial.print(P1_RGB_B_val);
+  Serial.print(C_RGB_R_val);
+  Serial.print(',');
+  Serial.println(C_RGB_B_val);
+
+  analogWrite(P1_RGB_R, P1_RGB_R_val);
+  analogWrite(P1_RGB_B, P1_RGB_B_val);
 
   if (winner) {
     gameFinish();
