@@ -35,6 +35,7 @@ x pusing the button flashes the led that's incrementing
 x counter translates to front 3 leds being lit
 x debounce leds
 x when counter gets to certain threshhold, game is over. turn leds off, Flash winner leds and then reset
+x ability to restart game after it's ended/at any point, without using reset button on esp32
 - add switch: if controller switch != user switch, decrease score instead of increasing it
 - some sort of negative feedback for bad switch and button press
 - controller switch randomly changes every so often
@@ -44,13 +45,8 @@ x when counter gets to certain threshhold, game is over. turn leds off, Flash wi
 - randomly change the controller joystick color
 - add two users
 
-b sometimes when switching to the next led, the previous one turns off
-b sometimes when pressing the button, the led turns off for the current click
-
 * pwb on leds
 * start mode: leds are off, middle color leds are white. Both players hold button to start the game, at which the controller leds count down 3 2 1
-* ability to restart game after it's ended/at any point, without using reset button on esp32
-
 */
 
 const int P1_BUTTON = 23; // GPIO23
@@ -186,12 +182,16 @@ int getPin(int player) {
   int score = player == 1 ? scoreP1 : scoreP2;
   int pin = -1;
 
+  if (score == LED_MAX) {
+    analogWrite(player == 1 ? P1_GREEN_1 : P2_GREEN_1, 255);
+  }
+
   if (score > LED_MAX * 2) {
-    score = score - (LED_MAX * 2);
     pin = player == 1 ? P1_GREEN_3 : P2_GREEN_3;
+    analogWrite(player == 1 ? P1_GREEN_2 : P2_GREEN_2, 255);
+    analogWrite(player == 1 ? P1_GREEN_1 : P2_GREEN_1, 255);
   } else if (score > LED_MAX) {
-    score = score - LED_MAX;
-    pin = player == 1 ? P1_GREEN_2 : P1_GREEN_2;
+    pin = player == 1 ? P1_GREEN_2 : P2_GREEN_2;
   } else {
     pin = player == 1 ? P1_GREEN_1 : P2_GREEN_1;
   }
@@ -202,8 +202,14 @@ void setCharge(int player) {
   int score = getScore(player);
   int pin = getPin(player);
 
-  player == 1 ? animationInProgressP1 : animationInProgressP2 = true;
-  player == 1 ? animationStartTimeP1 : animationStartTimeP2 = esp_timer_get_time();
+  if (player == 1) {
+    animationInProgressP1 = true;
+    animationStartTimeP1 = esp_timer_get_time();
+  } else {
+    animationInProgressP2 = true;
+    animationStartTimeP2 = esp_timer_get_time();
+  }
+
   analogWrite(pin, 0);
 
   int fullScore = player == 1 ? scoreP1 : scoreP2;
@@ -218,9 +224,13 @@ void flashLED(int player) {
 
   if (player == 1 ? animationInProgressP1 : animationInProgressP2) {
     unsigned long currentTime = esp_timer_get_time();
-    int time = (currentTime - player == 1 ? animationInProgressP1 : animationStartTimeP2) / 1000;
+    int time = (currentTime - (player == 1 ? animationStartTimeP1 : animationStartTimeP2)) / 1000;
     if (time > ANIMATION_DURATION) {
-      (player == 1 ? animationInProgressP1 : animationInProgressP2) = false;
+      if (player == 1) {
+        animationInProgressP1 = false;
+      } else {
+        animationInProgressP2 = false;
+      }
       analogWrite(pin, score * 4);
     }
   }
