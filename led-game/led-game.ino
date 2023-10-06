@@ -133,6 +133,9 @@ public:
     
     int now = esp_timer_get_time();
     if (currentState != lastFlickerableState) {
+      if (pin == P2_BUTTON) {
+
+      }
       lastDebounceTime = now;
       lastFlickerableState = currentState;
     }
@@ -244,22 +247,19 @@ void flashLED(int player) {
   }
 }
 
-bool getDigitalInput(int pin, int player) {
-}
-
 void handleButton(){
-  if (buttonP1.debounce()) {
-    Serial.print("P1 button ");
-    Serial.println(scoreP1);
-    scoreP1 = max(scoreP1 + P1_multiplier, 0);
-    setCharge(1);
-  } 
-
   if (buttonP2.debounce()) {
     Serial.print("P2 button ");
     Serial.println(scoreP2);
     scoreP2 = max(scoreP2 + P2_multiplier, 0);
     setCharge(2);
+  } 
+  
+  if (buttonP1.debounce()) {
+    Serial.print("P1 button ");
+    Serial.println(scoreP1);
+    scoreP1 = max(scoreP1 + P1_multiplier, 0);
+    setCharge(1);
   } 
 
   flashLED(1);
@@ -437,6 +437,7 @@ void setup() {
   Serial.begin(9600);
   Serial.println("Starting up...");
   pinMode(P1_BUTTON, INPUT_PULLUP);
+  pinMode(P2_BUTTON, INPUT_PULLUP);
   pinMode(P1_GREEN_1, OUTPUT);
   pinMode(P1_GREEN_2, OUTPUT);
   pinMode(P1_GREEN_2, OUTPUT);
@@ -451,16 +452,16 @@ void setup() {
 }
 
 void loop() {
-  checkMatches();
+  // checkMatches();
   handleButton();
   flashLED(1);
   flashLED(2);
-  handleJoystick(1);
-  handleJoystick(2);
-  handleSwitch(1);
-  handleSwitch(2);
-  unsigned long currentMillis = millis();
-  randomActions(currentMillis);
+  // handleJoystick(1);
+  // handleJoystick(2);
+  // handleSwitch(1);
+  // handleSwitch(2);
+  // unsigned long currentMillis = millis();
+  // randomActions(currentMillis);
 
   if (winner) {
     gameFinish();
