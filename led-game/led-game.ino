@@ -112,7 +112,21 @@ int LED_MAX = SCORE_MAX / 3;
 
 int scoreP1 = 0;
 int scoreP2 = 0;
+int lastStateP1 = HIGH;
+int currentStateP1; 
+int lastSteadyStateP1 = LOW; 
+int lastFlickerableStateP1 = LOW; 
+unsigned long lastDebounceTimeP1 = 0;  
 
+int lastStateP2 = HIGH;
+int currentStateP2; 
+int lastSteadyStateP2 = LOW; 
+int lastFlickerableStateP2 = LOW; 
+unsigned long lastDebounceTimeP2 = 0;  
+
+// int ledPin = 32; // The LED is connected to digital pin 9
+// int brightness = 0; // Initialize the brightness value
+// int fadeAmount = 5; // Rate of brightness change
 bool animationInProgress = false;
 unsigned long animationStartTime = 0;
 
@@ -121,10 +135,6 @@ int winner = 0;
 int P1_SWITCH_val;
 int P2_SWITCH_val;
 int C_SWITCH_val = LOW;
-
-void handleButton(int player){
-  if (player == 1){
-     currentStateP1 = digitalRead(P1_BUTTON);
 
 class Debouncer {
 public:
@@ -233,29 +243,25 @@ void flashLED(int player) {
 }
 
 bool getDigitalInput(int pin, int player) {
-
 }
 
 void handleButton(){
   if (buttonP1.debounce()) {
     Serial.print("P1 button ");
     Serial.println(scoreP1);
-    scoreP1++;
+    scoreP1 += P1_multiplier;
     setCharge(1);
   } 
 
   if (buttonP2.debounce()) {
     Serial.print("P2 button ");
     Serial.println(scoreP2);
-    scoreP2++;
+    scoreP2 += P2_multiplier;
     setCharge(2);
   } 
 
   flashLED(1);
   flashLED(2);
-}
-
-void handleSwitch(int player){
 }
 
 void gameFinish(){
@@ -275,7 +281,7 @@ void gameFinish(){
   free(pins);
 }
 
-int getSwitch(int player){
+void handleSwitch(int player){
   int switch_pin = player == 1 ? P1_SWITCH : P2_SWITCH;
   int switch_pin_val;
 
@@ -286,8 +292,12 @@ int getSwitch(int player){
   pinMode(switch_pin, OUTPUT);
   digitalWrite(switch_pin, HIGH); // Turn on the LED
 
-  return switch_pin_val;
-  
+  if (player == 1) {
+    P1_SWITCH_val = switch_pin_val;
+  }
+  else {
+    P2_SWITCH_val = switch_pin_val;
+  }
 }
 
 void handleJoystick(int player){
@@ -433,12 +443,13 @@ void setup() {
 
 void loop() {
   checkMatches();
-  handleButton(1);
-  handleButton(2);
+  handleButton();
   flashLED(1);
   flashLED(2);
   handleJoystick(1);
   handleJoystick(2);
+  handleSwitch(1);
+  handleSwitch(2);
   unsigned long currentMillis = millis();
   randomActions(currentMillis);
 
