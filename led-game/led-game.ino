@@ -45,6 +45,7 @@ x when counter gets to certain threshhold, game is over. turn leds off, Flash wi
 - add two users
 
 b sometimes when switching to the next led, the previous one turns off
+b sometimes when pressing the button, the led turns off for the current click
 
 * pwb on leds
 * start mode: leds are off, middle color leds are white. Both players hold button to start the game, at which the controller leds count down 3 2 1
@@ -112,22 +113,6 @@ int LED_MAX = SCORE_MAX / 3;
 int scoreP1 = 0;
 int scoreP2 = 0;
 
-int lastStateP1 = HIGH;
-int currentStateP1; 
-int lastSteadyStateP1 = LOW; 
-int lastFlickerableStateP1 = LOW; 
-unsigned long lastDebounceTimeP1 = 0;  
-
-int lastStateP2 = HIGH;
-int currentStateP2; 
-int lastSteadyStateP2 = LOW; 
-int lastFlickerableStateP2 = LOW; 
-unsigned long lastDebounceTimeP2 = 0;  
-
-int ledPin = 32; // The LED is connected to digital pin 9
-int brightness = 0; // Initialize the brightness value
-int fadeAmount = 5; // Rate of brightness change
-
 bool animationInProgress = false;
 unsigned long animationStartTime = 0;
 
@@ -141,40 +126,43 @@ void handleButton(int player){
   if (player == 1){
      currentStateP1 = digitalRead(P1_BUTTON);
 
-    if (currentStateP1 != lastFlickerableStateP1) {
-      lastDebounceTimeP1 = esp_timer_get_time();
-      lastFlickerableStateP1 = currentStateP1;
+class Debouncer {
+public:
+  Debouncer(int pin) : pin(pin) {}
+  
+  bool debounce() {
+    int currentState = digitalRead(pin);
+    
+    int now = esp_timer_get_time();
+    if (currentState != lastFlickerableState) {
+      lastDebounceTime = now;
+      lastFlickerableState = currentState;
     }
 
-    if ((esp_timer_get_time() - lastDebounceTimeP1) > DEBOUNCE_TIME) {
-      if(lastSteadyStateP1 == HIGH && currentStateP1 == LOW) {
-        Serial.print("P1 press ");
-        Serial.println(scoreP1);
-        scoreP1 += P1_multiplier;
-        setCharge(1);
+    bool res = false;
+
+    if ((now - lastDebounceTime) > DEBOUNCE_TIME) {
+      if(lastSteadyState == HIGH && currentState == LOW) {
+        res = true;
       }
-      lastSteadyStateP1 = currentStateP1;
+      lastSteadyState = currentState;
     }
-    lastStateP1 = currentStateP1;
-  } else {
-    currentStateP2 = digitalRead(P2_BUTTON);
-
-    if (currentStateP2 != lastFlickerableStateP2) {
-      lastDebounceTimeP2 = esp_timer_get_time();
-      lastFlickerableStateP2 = currentStateP2;
-    }
-
-    if ((esp_timer_get_time() - lastDebounceTimeP2) / 1000 > DEBOUNCE_TIME) {
-      if(lastSteadyStateP2 == HIGH && currentStateP2 == LOW) {
-        Serial.print("P2 press");
-        Serial.println(scoreP2);
-        scoreP2 += P2_multiplier;
-      }
-      lastSteadyStateP2 = currentStateP2;
-    }
-    lastStateP2 = currentStateP2;
+    lastState = currentState;
+    return res;
   }
-}
+
+private:
+  int pin;
+  unsigned long lastDebounceTime = 0;
+  int lastState = HIGH;
+  int lastSteadyState = LOW;
+  int lastFlickerableState = LOW;
+};
+
+
+Debouncer buttonP1(P1_BUTTON);
+Debouncer buttonP2(P2_BUTTON);
+
 
 int getScore(int player) {
   int score = player == 1 ? scoreP1 : scoreP2;
@@ -242,6 +230,32 @@ void flashLED(int player) {
       analogWrite(pin, score * 4);
     }
   }
+}
+
+bool getDigitalInput(int pin, int player) {
+
+}
+
+void handleButton(){
+  if (buttonP1.debounce()) {
+    Serial.print("P1 button ");
+    Serial.println(scoreP1);
+    scoreP1++;
+    setCharge(1);
+  } 
+
+  if (buttonP2.debounce()) {
+    Serial.print("P2 button ");
+    Serial.println(scoreP2);
+    scoreP2++;
+    setCharge(2);
+  } 
+
+  flashLED(1);
+  flashLED(2);
+}
+
+void handleSwitch(int player){
 }
 
 void gameFinish(){
