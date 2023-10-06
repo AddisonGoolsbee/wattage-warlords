@@ -251,14 +251,14 @@ void handleButton(){
   if (buttonP1.debounce()) {
     Serial.print("P1 button ");
     Serial.println(scoreP1);
-    scoreP1 += P1_multiplier;
+    scoreP1 = max(scoreP1 + P1_multiplier, 0);
     setCharge(1);
   } 
 
   if (buttonP2.debounce()) {
     Serial.print("P2 button ");
     Serial.println(scoreP2);
-    scoreP2 += P2_multiplier;
+    scoreP2 = max(scoreP2 + P2_multiplier, 0);
     setCharge(2);
   } 
 
@@ -320,6 +320,9 @@ void handleJoystick(int player){
     else if (P1_RGB_R_val != 255 && P1_VRY_val == 0) {
         P1_RGB_R_val += 1;  // add 1 to P1_RGB_R_val
       }
+    // Serial.print(P1_RGB_R_val);
+    // Serial.print(", ");
+    // Serial.println(P1_VRX_val);
     analogWrite(P1_RGB_R, P1_RGB_R_val);
     analogWrite(P1_RGB_B, P1_RGB_B_val);
   }
@@ -374,6 +377,7 @@ void randomActions(unsigned long currentMillis){
     } else {
       C_SWITCH_val = LOW;
     }
+    digitalWrite(C_SWITCH, C_SWITCH_val);
   }
 }
 
@@ -425,6 +429,8 @@ void checkMatches(){
   else {
     P2_multiplier = 1;
   }
+  P1_multiplier = 1;
+  P2_multiplier = 1;
 }
 
 void setup() {
@@ -441,6 +447,7 @@ void setup() {
   pinMode(C_SWITCH, OUTPUT);
   analogWrite(C_RGB_R, C_RGB_R_val);
   analogWrite(C_RGB_B, C_RGB_B_val);
+  digitalWrite(C_SWITCH, C_SWITCH_val);
 }
 
 void loop() {
