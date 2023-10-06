@@ -436,8 +436,11 @@ void setup() {
   pinMode(C_RGB_B, OUTPUT);
   pinMode(P1_RGB_R, OUTPUT);
   pinMode(P1_RGB_B, OUTPUT);
-  pinMode(C_SWITCH, OUTPUT);
+  pinMode(P2_RGB_R, OUTPUT);
+  pinMode(P2_RGB_B, OUTPUT);
   
+  pinMode(C_SWITCH, OUTPUT);
+
   analogWrite(C_RGB_R, C_RGB_R_val);
   analogWrite(C_RGB_B, C_RGB_B_val);
   digitalWrite(C_SWITCH, C_SWITCH_val);
