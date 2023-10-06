@@ -5,8 +5,9 @@ TODO
 
 x pins start at 0, just one player to start
 x pushing the button makes the counter increment
-- pusing the button flashes the led that's incrementing
+x pusing the button flashes the led that's incrementing
 x counter translates to front 3 leds being lit
+x debounce leds
 - when counter gets to certain threshhold, game is over. turn leds off, Flash winner leds and then reset
 - add switch: if controller switch != user switch, decrease score instead of increasing it
 - some sort of negative feedback for bad switch and button press
@@ -33,8 +34,8 @@ x counter translates to front 3 leds being lit
 #define CHARGE_PIN_P2_2 -1
 #define CHARGE_PIN_P2_3 -1
 
-#define DEBOUNCE_TIME 25
-#define SCORE_MAX 192
+#define DEBOUNCE_TIME 200
+#define SCORE_MAX 48
 #define ANIMATION_DURATION 20
 
 int LED_MAX = SCORE_MAX / 3;
@@ -62,22 +63,28 @@ int fadeAmount = 5; // Rate of brightness change
 bool animationInProgress = false;
 unsigned long animationStartTime = 0;
 
+int winner = 0;
 
-#line 64 "/Users/addisongoolsbee/Desktop/class/CPSC-334/interactiveDevices/led-game/led-game.ino"
+
+#line 67 "/Users/addisongoolsbee/Desktop/class/CPSC-334/interactiveDevices/led-game/led-game.ino"
 void handleButton(int player);
-#line 103 "/Users/addisongoolsbee/Desktop/class/CPSC-334/interactiveDevices/led-game/led-game.ino"
+#line 106 "/Users/addisongoolsbee/Desktop/class/CPSC-334/interactiveDevices/led-game/led-game.ino"
 int getScore(int player);
-#line 113 "/Users/addisongoolsbee/Desktop/class/CPSC-334/interactiveDevices/led-game/led-game.ino"
+#line 116 "/Users/addisongoolsbee/Desktop/class/CPSC-334/interactiveDevices/led-game/led-game.ino"
+int * getPins(int player);
+#line 130 "/Users/addisongoolsbee/Desktop/class/CPSC-334/interactiveDevices/led-game/led-game.ino"
 int getPin(int player);
-#line 129 "/Users/addisongoolsbee/Desktop/class/CPSC-334/interactiveDevices/led-game/led-game.ino"
+#line 146 "/Users/addisongoolsbee/Desktop/class/CPSC-334/interactiveDevices/led-game/led-game.ino"
 void setCharge(int player);
-#line 138 "/Users/addisongoolsbee/Desktop/class/CPSC-334/interactiveDevices/led-game/led-game.ino"
+#line 160 "/Users/addisongoolsbee/Desktop/class/CPSC-334/interactiveDevices/led-game/led-game.ino"
 void flashLED(int player);
-#line 153 "/Users/addisongoolsbee/Desktop/class/CPSC-334/interactiveDevices/led-game/led-game.ino"
+#line 174 "/Users/addisongoolsbee/Desktop/class/CPSC-334/interactiveDevices/led-game/led-game.ino"
+void gameFinish();
+#line 192 "/Users/addisongoolsbee/Desktop/class/CPSC-334/interactiveDevices/led-game/led-game.ino"
 void setup();
-#line 162 "/Users/addisongoolsbee/Desktop/class/CPSC-334/interactiveDevices/led-game/led-game.ino"
+#line 201 "/Users/addisongoolsbee/Desktop/class/CPSC-334/interactiveDevices/led-game/led-game.ino"
 void loop();
-#line 64 "/Users/addisongoolsbee/Desktop/class/CPSC-334/interactiveDevices/led-game/led-game.ino"
+#line 67 "/Users/addisongoolsbee/Desktop/class/CPSC-334/interactiveDevices/led-game/led-game.ino"
 void handleButton(int player){
   if (player == 1){
      currentStateP1 = digitalRead(BUTTON_PIN_P1);
@@ -105,7 +112,7 @@ void handleButton(int player){
       lastFlickerableStateP2 = currentStateP2;
     }
 
-    if ((esp_timer_get_time() - lastDebounceTimeP2) > DEBOUNCE_TIME) {
+    if ((esp_timer_get_time() - lastDebounceTimeP2) / 1000 > DEBOUNCE_TIME) {
       if(lastSteadyStateP2 == HIGH && currentStateP2 == LOW) {
         Serial.print("P2 press");
         Serial.println(scoreP2);
@@ -125,6 +132,20 @@ int getScore(int player) {
     score -= LED_MAX;
   }
   return score;
+}
+
+int* getPins(int player) {
+  int pins[3];
+  if (player == 1) {
+      pins[0] = CHARGE_PIN_P1_1;
+      pins[1] = CHARGE_PIN_P1_2;
+      pins[2] = CHARGE_PIN_P1_3;
+  } else {
+      pins[0] = CHARGE_PIN_P2_1;
+      pins[1] = CHARGE_PIN_P2_2;
+      pins[2] = CHARGE_PIN_P2_3;
+  }
+  return pins;
 }
 
 int getPin(int player) {
@@ -149,6 +170,11 @@ void setCharge(int player) {
   animationInProgress = true;
   animationStartTime = esp_timer_get_time();
   analogWrite(pin, 0);
+
+  if (score >= SCORE_MAX){
+    Serial.println("happy");
+    winner = player;
+  }
   
 }
 
@@ -161,11 +187,28 @@ void flashLED(int player) {
     int time = (currentTime - animationStartTime) / 1000;
     if (time > ANIMATION_DURATION) {
       animationInProgress = false;
-
       analogWrite(pin, score * 4);
     }
   }
 }
+
+void gameFinish(){
+  Serial.println("howdy");
+  int* pins = getPins(winner);
+
+  while (true) {
+    for (int i=0; i<3; i++) {
+      analogWrite(pins[i], 0);
+    }
+    delay(500);
+    for (int i=0; i<3; i++) {
+      analogWrite(pins[i], 255);
+    }
+    delay(500);
+  }
+}
+
+
 
 void setup() {
   Serial.begin(9600);
@@ -179,4 +222,9 @@ void setup() {
 void loop() {
   handleButton(1);
   flashLED(1);
+
+  if (winner != 0) {
+    Serial.println("asdfasdf");
+    gameFinish();
+  }
 }

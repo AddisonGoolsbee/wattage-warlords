@@ -3,8 +3,9 @@ TODO
 
 x pins start at 0, just one player to start
 x pushing the button makes the counter increment
-- pusing the button flashes the led that's incrementing
+x pusing the button flashes the led that's incrementing
 x counter translates to front 3 leds being lit
+x debounce leds
 - when counter gets to certain threshhold, game is over. turn leds off, Flash winner leds and then reset
 - add switch: if controller switch != user switch, decrease score instead of increasing it
 - some sort of negative feedback for bad switch and button press
@@ -31,8 +32,8 @@ x counter translates to front 3 leds being lit
 #define CHARGE_PIN_P2_2 -1
 #define CHARGE_PIN_P2_3 -1
 
-#define DEBOUNCE_TIME 25
-#define SCORE_MAX 192
+#define DEBOUNCE_TIME 200
+#define SCORE_MAX 48
 #define ANIMATION_DURATION 20
 
 int LED_MAX = SCORE_MAX / 3;
@@ -59,6 +60,8 @@ int fadeAmount = 5; // Rate of brightness change
 
 bool animationInProgress = false;
 unsigned long animationStartTime = 0;
+
+int winner = 0;
 
 
 void handleButton(int player){
@@ -88,7 +91,7 @@ void handleButton(int player){
       lastFlickerableStateP2 = currentStateP2;
     }
 
-    if ((esp_timer_get_time() - lastDebounceTimeP2) > DEBOUNCE_TIME) {
+    if ((esp_timer_get_time() - lastDebounceTimeP2) / 1000 > DEBOUNCE_TIME) {
       if(lastSteadyStateP2 == HIGH && currentStateP2 == LOW) {
         Serial.print("P2 press");
         Serial.println(scoreP2);
@@ -108,6 +111,20 @@ int getScore(int player) {
     score -= LED_MAX;
   }
   return score;
+}
+
+int* getPins(int player) {
+  int pins[3];
+  if (player == 1) {
+      pins[0] = CHARGE_PIN_P1_1;
+      pins[1] = CHARGE_PIN_P1_2;
+      pins[2] = CHARGE_PIN_P1_3;
+  } else {
+      pins[0] = CHARGE_PIN_P2_1;
+      pins[1] = CHARGE_PIN_P2_2;
+      pins[2] = CHARGE_PIN_P2_3;
+  }
+  return pins;
 }
 
 int getPin(int player) {
@@ -132,6 +149,11 @@ void setCharge(int player) {
   animationInProgress = true;
   animationStartTime = esp_timer_get_time();
   analogWrite(pin, 0);
+
+  if (score >= SCORE_MAX){
+    Serial.println("happy");
+    winner = player;
+  }
   
 }
 
@@ -149,6 +171,24 @@ void flashLED(int player) {
   }
 }
 
+void gameFinish(){
+  Serial.println("howdy");
+  int* pins = getPins(winner);
+
+  while (true) {
+    for (int i=0; i<3; i++) {
+      analogWrite(pins[i], 0);
+    }
+    delay(500);
+    for (int i=0; i<3; i++) {
+      analogWrite(pins[i], 255);
+    }
+    delay(500);
+  }
+}
+
+
+
 void setup() {
   Serial.begin(9600);
   Serial.println("Hiadfasdf");
@@ -161,4 +201,9 @@ void setup() {
 void loop() {
   handleButton(1);
   flashLED(1);
+
+  if (winner != 0) {
+    Serial.println("asdfasdf");
+    gameFinish();
+  }
 }
