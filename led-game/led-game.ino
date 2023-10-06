@@ -283,70 +283,55 @@ void gameFinish(){
   free(pins);
 }
 
-void handleSwitch(int player){
-  int switch_pin = player == 1 ? P1_SWITCH : P2_SWITCH;
-  int switch_pin_val;
-
-  // Flips mode to input, reads the stte
-  pinMode(switch_pin , INPUT_PULLUP);
-  switch_pin_val = digitalRead(switch_pin); // Read the switch status
-
-  pinMode(switch_pin, OUTPUT);
-  digitalWrite(switch_pin, HIGH); // Turn on the LED
-
-  if (player == 1) {
-    P1_SWITCH_val = switch_pin_val;
-  }
-  else {
-    P2_SWITCH_val = switch_pin_val;
-  }
-}
-
 void handleJoystick(int player){
-  if (player == 1) {
+  static unsigned long lastUpdate1 = 0;
+  static unsigned long lastUpdate2 = 0;
+  unsigned long currentMillis = millis();
+
+  if (player == 1 && currentMillis - lastUpdate1 >= 10) { // Adjust delay as needed
     int P1_VRX_val = analogRead(P1_VRX);
     int P1_VRY_val = analogRead(P1_VRY);
 
     if (P1_RGB_B_val != 0 && P1_VRX_val == 4095) { 
-        P1_RGB_B_val -= 1;  // remove 1 from P1_RGB_B_val
-      }
-    else if (P1_RGB_B_val != 255 && P1_VRX_val == 0) {
-        P1_RGB_B_val += 1;  // add 1 to P1_RGB_B_val
-      }
+      P1_RGB_B_val -= 3;
+      analogWrite(P1_RGB_B, P1_RGB_B_val);
+    } else if (P1_RGB_B_val != 255 && P1_VRX_val == 0) {
+      P1_RGB_B_val += 3;
+      analogWrite(P1_RGB_B, P1_RGB_B_val);
+    }
 
     if (P1_RGB_R_val != 0 && P1_VRY_val == 4095) { 
-        P1_RGB_R_val -= 1;  // remove 1 from P1_RGB_R_val
-      }
-    else if (P1_RGB_R_val != 255 && P1_VRY_val == 0) {
-        P1_RGB_R_val += 1;  // add 1 to P1_RGB_R_val
-      }
-    // Serial.print(P1_RGB_R_val);
-    // Serial.print(", ");
-    // Serial.println(P1_VRX_val);
-    analogWrite(P1_RGB_R, P1_RGB_R_val);
-    analogWrite(P1_RGB_B, P1_RGB_B_val);
-  }
-  else if (player == 2) {
+      P1_RGB_R_val -= 3;
+      analogWrite(P1_RGB_R, P1_RGB_R_val);
+    } else if (P1_RGB_R_val != 255 && P1_VRY_val == 0) {
+      P1_RGB_R_val += 3;
+      analogWrite(P1_RGB_R, P1_RGB_R_val);
+    }
+    lastUpdate1 = currentMillis;
+
+  } else if (player == 2 && currentMillis - lastUpdate2 >= 10) { // Adjust delay as needed
     int P2_VRX_val = analogRead(P2_VRX);
     int P2_VRY_val = analogRead(P2_VRY);
 
     if (P2_RGB_B_val != 0 && P2_VRX_val == 4095) { 
-        P2_RGB_B_val -= 1;  // remove 1 from P1_RGB_B_val
-      }
-    else if (P2_RGB_B_val != 255 && P2_VRX_val == 0) {
-        P2_RGB_B_val += 1;  // add 1 to P1_RGB_B_val
-      }
+      P2_RGB_B_val -= 3;
+      analogWrite(P2_RGB_B, P2_RGB_B_val);
+    } else if (P2_RGB_B_val != 255 && P2_VRX_val == 0) {
+      P2_RGB_B_val += 3;
+      analogWrite(P2_RGB_B, P2_RGB_B_val);
+    }
 
     if (P2_RGB_R_val != 0 && P2_VRY_val == 4095) { 
-        P2_RGB_R_val -= 1;  // remove 1 from P1_RGB_R_val
-      }
-    else if (P2_RGB_R_val != 255 && P2_VRY_val == 0) {
-        P2_RGB_R_val += 1;  // add 1 to P1_RGB_R_val
-      }
-    analogWrite(P2_RGB_R, P2_RGB_R_val);
-    analogWrite(P2_RGB_B, P2_RGB_B_val);
+      P2_RGB_R_val -= 3;
+      analogWrite(P2_RGB_R, P2_RGB_R_val);
+    } else if (P2_RGB_R_val != 255 && P2_VRY_val == 0) {
+      P2_RGB_R_val += 3;
+      analogWrite(P2_RGB_R, P2_RGB_R_val);
+    }
+    lastUpdate2 = currentMillis;
   }
 }
+
 
 void randomActions(unsigned long currentMillis){
     if (currentMillis - previousMillisRGB >= interval_RGB) {
