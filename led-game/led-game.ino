@@ -53,13 +53,9 @@ const int P1_BUTTON = 23; // GPIO23
 const int P2_BUTTON = 22; // GPIO22
 
 // Switches
-const int P1_SWITCH = 17; // GPIO17
-const int P2_SWITCH = 16; // GPIO16
-
-// White LEDs
-const int P1_WHITE = 21; // GPIO21
-const int P2_WHITE = 19; // GPIO19
-const int C_WHITE = 18;  // GPIO18
+const int P1_SWITCH = 5; // GPIO17 +20ohm
+const int P2_SWITCH = 16; // GPIO16 + 20ohm
+const int C_SWITCH = 18;  // GPIO18 + 20ohm
 
 // VRX and VRY for Joysticks
 // -VRX = deltaY
@@ -93,10 +89,14 @@ const int ANIMATION_DURATION = 20;
 
 int P1_RGB_B_val = 0;
 int P1_RGB_R_val = 0;
+int P2_RGB_B_val = 0;
+int P2_RGB_R_val = 0;
 int C_RGB_R_val = 255;
 int C_RGB_B_val = 255;
-unsigned long previousMillis = 0;
+unsigned long previousMillisRGB = 0;
+unsigned long previousMillisSwitch = 0;
 long interval_RGB = random(8000, 15001);  // Random interval between 8 and 15 seconds
+long interval_switch = random(8000, 15001);  // Random interval between 8 and 15 seconds
 bool P1_RGB_matched = true;
 bool P2_RGB_matched = true;
 bool P1_W_matched = true;
@@ -107,6 +107,11 @@ int P2_multiplier = 1;
 
 int scoreP1 = 0;
 int scoreP2 = 0;
+int lastStateP1 = HIGH;
+int currentStateP1; 
+int lastSteadyStateP1 = LOW; 
+int lastFlickerableStateP1 = LOW; 
+unsigned long lastDebounceTimeP1 = 0;  
 
 bool animationInProgressP1 = false;
 unsigned long animationStartTimeP1 = 0;
@@ -115,6 +120,9 @@ unsigned long animationStartTimeP2 = 0;
 
 int winner = 0;
 
+int P1_SWITCH_val;
+int P2_SWITCH_val;
+int C_SWITCH_val = LOW;
 
 class Debouncer {
 public:
@@ -237,29 +245,25 @@ void flashLED(int player) {
 }
 
 bool getDigitalInput(int pin, int player) {
-
 }
 
 void handleButton(){
   if (buttonP1.debounce()) {
     Serial.print("P1 button ");
     Serial.println(scoreP1);
-    scoreP1++;
+    scoreP1 += P1_multiplier;
     setCharge(1);
   } 
 
   if (buttonP2.debounce()) {
     Serial.print("P2 button ");
     Serial.println(scoreP2);
-    scoreP2++;
+    scoreP2 += P2_multiplier;
     setCharge(2);
   } 
 
   flashLED(1);
   flashLED(2);
-}
-
-void handleSwitch(int player){
 }
 
 void gameFinish(){
@@ -279,50 +283,71 @@ void gameFinish(){
   free(pins);
 }
 
+void handleSwitch(int player){
+  int switch_pin = player == 1 ? P1_SWITCH : P2_SWITCH;
+  int switch_pin_val;
 
-void setup() {
-  Serial.begin(9600);
-  Serial.println("Starting up...");
+  // Flips mode to input, reads the stte
+  pinMode(switch_pin , INPUT_PULLUP);
+  switch_pin_val = digitalRead(switch_pin); // Read the switch status
 
-  pinMode(P1_BUTTON, INPUT_PULLUP);
-  pinMode(P1_GREEN_1, OUTPUT);
-  pinMode(P1_GREEN_2, OUTPUT);
-  pinMode(P1_GREEN_2, OUTPUT);
-  pinMode(C_RGB_R, OUTPUT);
-  pinMode(C_RGB_B, OUTPUT);
-  pinMode(P1_RGB_R, OUTPUT);
-  pinMode(P1_RGB_B, OUTPUT);
-  analogWrite(C_RGB_R, C_RGB_R_val);
-  analogWrite(C_RGB_B, C_RGB_B_val);
+  pinMode(switch_pin, OUTPUT);
+  digitalWrite(switch_pin, HIGH); // Turn on the LED
+
+  if (player == 1) {
+    P1_SWITCH_val = switch_pin_val;
+  }
+  else {
+    P2_SWITCH_val = switch_pin_val;
+  }
 }
 
-void loop() {
-  handleButton();
-  handleSwitch(1);
+void handleJoystick(int player){
+  if (player == 1) {
+    int P1_VRX_val = analogRead(P1_VRX);
+    int P1_VRY_val = analogRead(P1_VRY);
 
-  
-  // read the input on analog pin P1_GREEN_1:
-  int P1_VRX_val = analogRead(P2_VRX);
-  int P1_VRY_val = analogRead(P2_VRY);
+    if (P1_RGB_B_val != 0 && P1_VRX_val == 4095) { 
+        P1_RGB_B_val -= 1;  // remove 1 from P1_RGB_B_val
+      }
+    else if (P1_RGB_B_val != 255 && P1_VRX_val == 0) {
+        P1_RGB_B_val += 1;  // add 1 to P1_RGB_B_val
+      }
 
-  if (P1_RGB_B_val != 0 && P1_VRX_val == 4095) { 
-      P1_RGB_B_val -= 1;  // remove 1 from P1_RGB_B_val
-    }
-  else if (P1_RGB_B_val != 255 && P1_VRX_val == 0) {
-      P1_RGB_B_val += 1;  // add 1 to P1_RGB_B_val
-    }
+    if (P1_RGB_R_val != 0 && P1_VRY_val == 4095) { 
+        P1_RGB_R_val -= 1;  // remove 1 from P1_RGB_R_val
+      }
+    else if (P1_RGB_R_val != 255 && P1_VRY_val == 0) {
+        P1_RGB_R_val += 1;  // add 1 to P1_RGB_R_val
+      }
+    analogWrite(P1_RGB_R, P1_RGB_R_val);
+    analogWrite(P1_RGB_B, P1_RGB_B_val);
+  }
+  else if (player == 2) {
+    int P2_VRX_val = analogRead(P2_VRX);
+    int P2_VRY_val = analogRead(P2_VRY);
 
-  if (P1_RGB_R_val != 0 && P1_VRY_val == 4095) { 
-      P1_RGB_R_val -= 1;  // remove 1 from P1_RGB_R_val
-    }
-  else if (P1_RGB_R_val != 255 && P1_VRY_val == 0) {
-      P1_RGB_R_val += 1;  // add 1 to P1_RGB_R_val
-    }
+    if (P2_RGB_B_val != 0 && P2_VRX_val == 4095) { 
+        P2_RGB_B_val -= 1;  // remove 1 from P1_RGB_B_val
+      }
+    else if (P2_RGB_B_val != 255 && P2_VRX_val == 0) {
+        P2_RGB_B_val += 1;  // add 1 to P1_RGB_B_val
+      }
 
-  unsigned long currentMillis = millis();
-  
-  if (currentMillis - previousMillis >= interval_RGB) {
-    previousMillis = currentMillis;
+    if (P2_RGB_R_val != 0 && P2_VRY_val == 4095) { 
+        P2_RGB_R_val -= 1;  // remove 1 from P1_RGB_R_val
+      }
+    else if (P2_RGB_R_val != 255 && P2_VRY_val == 0) {
+        P2_RGB_R_val += 1;  // add 1 to P1_RGB_R_val
+      }
+    analogWrite(P2_RGB_R, P2_RGB_R_val);
+    analogWrite(P2_RGB_B, P2_RGB_B_val);
+  }
+}
+
+void randomActions(unsigned long currentMillis){
+    if (currentMillis - previousMillisRGB >= interval_RGB) {
+    previousMillisRGB = currentMillis;
 
     // Update C_RGB_R_val
     int new_val = random(0, 256);
@@ -343,6 +368,30 @@ void loop() {
     interval_RGB = random(8000, 15001);
   }
 
+  if (currentMillis - previousMillisSwitch >= interval_switch) {
+    if (C_SWITCH_val == LOW) {
+      C_SWITCH_val = HIGH;
+    } else {
+      C_SWITCH_val = LOW;
+    }
+  }
+}
+
+void checkMatches(){
+  if (P1_SWITCH_val == C_SWITCH_val) {
+    P1_W_matched = true;
+  }
+  else {
+    P1_W_matched = false;
+  }
+
+  if (P2_SWITCH_val == C_SWITCH_val) {
+    P2_W_matched = true;
+  }
+  else {
+    P2_W_matched = false;
+  }
+
   if (P1_RGB_R_val > (C_RGB_R_val + 49) || P1_RGB_R_val < (C_RGB_B_val - 49)) {
     P1_RGB_matched = false;
   }
@@ -360,16 +409,54 @@ void loop() {
     P1_multiplier = 1;
   }
 
-  // print out the value you read:
-  // Serial.print(P1_RGB_R_val);
-  // Serial.print(',');
-  // Serial.print(P1_RGB_B_val);
-  // Serial.print(C_RGB_R_val);
-  // Serial.print(',');
-  // Serial.println(C_RGB_B_val);
+  if (P2_RGB_R_val > (C_RGB_R_val + 49) || P2_RGB_R_val < (C_RGB_B_val - 49)) {
+    P2_RGB_matched = false;
+  }
+  else {
+    P2_RGB_matched = true;
+  }
 
-  analogWrite(P1_RGB_R, P1_RGB_R_val);
-  analogWrite(P1_RGB_B, P1_RGB_B_val);
+  if (P2_W_matched == false && P2_RGB_matched == false) {
+    P2_multiplier = -2;
+  }
+  else if (P1_W_matched == false || P1_RGB_matched == false) {
+    P2_multiplier = -1;
+  }
+  else {
+    P2_multiplier = 1;
+  }
+}
+
+void setup() {
+  Serial.begin(9600);
+  Serial.println("Starting up...");
+  pinMode(P1_BUTTON, INPUT_PULLUP);
+  pinMode(P1_GREEN_1, OUTPUT);
+  pinMode(P1_GREEN_2, OUTPUT);
+  pinMode(P1_GREEN_2, OUTPUT);
+  pinMode(C_RGB_R, OUTPUT);
+  pinMode(C_RGB_B, OUTPUT);
+  pinMode(P1_RGB_R, OUTPUT);
+  pinMode(P1_RGB_B, OUTPUT);
+  pinMode(C_SWITCH, OUTPUT);
+  analogWrite(C_RGB_R, C_RGB_R_val);
+  analogWrite(C_RGB_B, C_RGB_B_val);
+}
+
+void loop() {
+  checkMatches();
+  handleButton();
+  flashLED(1);
+  flashLED(2);
+  handleJoystick(1);
+  handleJoystick(2);
+  handleSwitch(1);
+  handleSwitch(2);
+  unsigned long currentMillis = millis();
+  randomActions(currentMillis);
+
+  // print out the value you read:
+  Serial.println(P1_SWITCH_val);
 
   if (winner) {
     gameFinish();
