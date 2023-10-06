@@ -283,6 +283,25 @@ void gameFinish(){
   free(pins);
 }
 
+void handleSwitch(int player){
+  int switch_pin = player == 1 ? P1_SWITCH : P2_SWITCH;
+  int switch_pin_val;
+
+  // Flips mode to input, reads the stte
+  pinMode(switch_pin , INPUT_PULLUP);
+  switch_pin_val = digitalRead(switch_pin); // Read the switch status
+
+  pinMode(switch_pin, OUTPUT);
+  digitalWrite(switch_pin, HIGH); // Turn on the LED
+
+  if (player == 1) {
+    P1_SWITCH_val = switch_pin_val;
+  }
+  else {
+    P2_SWITCH_val = switch_pin_val;
+  }
+}
+
 void handleJoystick(int player){
   static unsigned long lastUpdate1 = 0;
   static unsigned long lastUpdate2 = 0;
@@ -333,8 +352,10 @@ void handleJoystick(int player){
 }
 
 
-void randomActions(unsigned long currentMillis){
-    if (currentMillis - previousMillisRGB >= interval_RGB) {
+void randomActions(){
+  unsigned long currentMillis = millis();
+
+  if (currentMillis - previousMillisRGB >= interval_RGB) {
     previousMillisRGB = currentMillis;
 
     // Update C_RGB_R_val
@@ -438,7 +459,7 @@ void setup() {
   pinMode(P1_RGB_B, OUTPUT);
   pinMode(P2_RGB_R, OUTPUT);
   pinMode(P2_RGB_B, OUTPUT);
-  
+
   pinMode(C_SWITCH, OUTPUT);
 
   analogWrite(C_RGB_R, C_RGB_R_val);
@@ -447,16 +468,15 @@ void setup() {
 }
 
 void loop() {
-  // checkMatches();
+  checkMatches();
   handleButton();
   flashLED(1);
   flashLED(2);
-  // handleJoystick(1);
-  // handleJoystick(2);
-  // handleSwitch(1);
-  // handleSwitch(2);
-  // unsigned long currentMillis = millis();
-  // randomActions(currentMillis);
+  handleJoystick(1);
+  handleJoystick(2);
+  handleSwitch(1);
+  handleSwitch(2);
+  randomActions();
 
   if (winner) {
     gameFinish();
