@@ -146,7 +146,7 @@ void handleButton(int player){
       if(lastSteadyStateP1 == HIGH && currentStateP1 == LOW) {
         Serial.print("P1 press ");
         Serial.println(scoreP1);
-        scoreP1++;
+        scoreP1 += P1_multiplier;
         setCharge(1);
       }
       lastSteadyStateP1 = currentStateP1;
@@ -164,7 +164,7 @@ void handleButton(int player){
       if(lastSteadyStateP2 == HIGH && currentStateP2 == LOW) {
         Serial.print("P2 press");
         Serial.println(scoreP2);
-        scoreP2++;
+        scoreP2 += P2_multiplier;
       }
       lastSteadyStateP2 = currentStateP2;
     }
