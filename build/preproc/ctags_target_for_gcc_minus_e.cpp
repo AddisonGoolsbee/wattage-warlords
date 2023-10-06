@@ -22,7 +22,7 @@ x debounce leds
 
 */
 # 39 "/Users/addisongoolsbee/Desktop/class/CPSC-334/interactiveDevices/led-game/led-game.ino"
-int LED_MAX = 48 / 3;
+int LED_MAX = 192 / 3;
 
 
 int scoreP1 = 0;
@@ -100,7 +100,7 @@ int getScore(int player) {
 }
 
 int* getPins(int player) {
-  int pins[3];
+  int* pins = (int*) malloc(3 * sizeof(int));
   if (player == 1) {
       pins[0] = 32;
       pins[1] = 33;
@@ -132,15 +132,15 @@ int getPin(int player) {
 void setCharge(int player) {
   int score = getScore(player);
   int pin = getPin(player);
+
   animationInProgress = true;
   animationStartTime = esp_timer_get_time();
   analogWrite(pin, 0);
 
-  if (score >= 48){
-    Serial.println("happy");
+  int fullScore = player == 1 ? scoreP1 : scoreP2;
+  if (fullScore >= 192){
     winner = player;
   }
-
 }
 
 void flashLED(int player) {
@@ -158,7 +158,6 @@ void flashLED(int player) {
 }
 
 void gameFinish(){
-  Serial.println("howdy");
   int* pins = getPins(winner);
 
   while (true) {
@@ -171,13 +170,15 @@ void gameFinish(){
     }
     delay(500);
   }
+
+  free(pins);
 }
 
 
 
 void setup() {
   Serial.begin(9600);
-  Serial.println("Hiadfasdf");
+  Serial.println("Starting up...");
   pinMode(21, 0x05);
   pinMode(32, 0x03);
   pinMode(33, 0x03);
@@ -188,8 +189,7 @@ void loop() {
   handleButton(1);
   flashLED(1);
 
-  if (winner != 0) {
-    Serial.println("asdfasdf");
+  if (winner) {
     gameFinish();
   }
 }

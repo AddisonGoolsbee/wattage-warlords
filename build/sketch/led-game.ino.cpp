@@ -35,7 +35,7 @@ x debounce leds
 #define CHARGE_PIN_P2_3 -1
 
 #define DEBOUNCE_TIME 200
-#define SCORE_MAX 48
+#define SCORE_MAX 192
 #define ANIMATION_DURATION 20
 
 int LED_MAX = SCORE_MAX / 3;
@@ -80,9 +80,9 @@ void setCharge(int player);
 void flashLED(int player);
 #line 174 "/Users/addisongoolsbee/Desktop/class/CPSC-334/interactiveDevices/led-game/led-game.ino"
 void gameFinish();
-#line 192 "/Users/addisongoolsbee/Desktop/class/CPSC-334/interactiveDevices/led-game/led-game.ino"
+#line 193 "/Users/addisongoolsbee/Desktop/class/CPSC-334/interactiveDevices/led-game/led-game.ino"
 void setup();
-#line 201 "/Users/addisongoolsbee/Desktop/class/CPSC-334/interactiveDevices/led-game/led-game.ino"
+#line 202 "/Users/addisongoolsbee/Desktop/class/CPSC-334/interactiveDevices/led-game/led-game.ino"
 void loop();
 #line 67 "/Users/addisongoolsbee/Desktop/class/CPSC-334/interactiveDevices/led-game/led-game.ino"
 void handleButton(int player){
@@ -135,7 +135,7 @@ int getScore(int player) {
 }
 
 int* getPins(int player) {
-  int pins[3];
+  int* pins = (int*) malloc(3 * sizeof(int));
   if (player == 1) {
       pins[0] = CHARGE_PIN_P1_1;
       pins[1] = CHARGE_PIN_P1_2;
@@ -167,15 +167,15 @@ int getPin(int player) {
 void setCharge(int player) {
   int score = getScore(player);
   int pin = getPin(player);
+
   animationInProgress = true;
   animationStartTime = esp_timer_get_time();
   analogWrite(pin, 0);
 
-  if (score >= SCORE_MAX){
-    Serial.println("happy");
+  int fullScore = player == 1 ? scoreP1 : scoreP2;
+  if (fullScore >= SCORE_MAX){
     winner = player;
   }
-  
 }
 
 void flashLED(int player) {
@@ -193,7 +193,6 @@ void flashLED(int player) {
 }
 
 void gameFinish(){
-  Serial.println("howdy");
   int* pins = getPins(winner);
 
   while (true) {
@@ -206,13 +205,15 @@ void gameFinish(){
     }
     delay(500);
   }
+
+  free(pins);
 }
 
 
 
 void setup() {
   Serial.begin(9600);
-  Serial.println("Hiadfasdf");
+  Serial.println("Starting up...");
   pinMode(BUTTON_PIN_P1, INPUT_PULLUP);
   pinMode(CHARGE_PIN_P1_1, OUTPUT);
   pinMode(CHARGE_PIN_P1_2, OUTPUT);
@@ -223,8 +224,7 @@ void loop() {
   handleButton(1);
   flashLED(1);
 
-  if (winner != 0) {
-    Serial.println("asdfasdf");
+  if (winner) {
     gameFinish();
   }
 }
