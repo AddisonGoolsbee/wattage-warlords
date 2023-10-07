@@ -221,7 +221,9 @@ void setCharge(int player) {
     animationStartTimeP2 = esp_timer_get_time();
   }
 
-  analogWrite(pin, 0);
+  if (player == 1 ? P1_multiplier : P2_multiplier) {
+    analogWrite(pin, 0);
+  }
 
   int fullScore = player == 1 ? scoreP1 : scoreP2;
   if (fullScore >= SCORE_MAX){
@@ -262,8 +264,14 @@ void handleButton(){
     setCharge(1);
   } 
 
-  flashLED(1);
-  flashLED(2);
+  if (P1_multiplier) {
+    flashLED(1);
+  }
+
+  if (P2_multiplier) {
+    flashLED(2);
+  }
+  
 }
 
 void gameFinish(){
@@ -409,13 +417,9 @@ void checkMatches(){
     P1_RGB_matched = true;
   }
 
-  if (P1_W_matched == false && P1_RGB_matched == false) {
-    P1_multiplier = -2;
-  }
-  else if (P1_W_matched == false || P1_RGB_matched == false) {
-    P1_multiplier = -1;
-  }
-  else {
+  if (P1_W_matched == false || P1_RGB_matched == false) {
+    P1_multiplier = 0;
+  } else {
     P1_multiplier = 1;
   }
 
@@ -426,17 +430,11 @@ void checkMatches(){
     P2_RGB_matched = true;
   }
 
-  if (P2_W_matched == false && P2_RGB_matched == false) {
-    P2_multiplier = -2;
-  }
-  else if (P1_W_matched == false || P1_RGB_matched == false) {
-    P2_multiplier = -1;
-  }
-  else {
+  if (P2_W_matched == false || P2_RGB_matched == false) {
+    P2_multiplier = 0;
+  } else {
     P2_multiplier = 1;
   }
-  P1_multiplier = 1;
-  P2_multiplier = 1;
 }
 
 void setup() {
