@@ -16,19 +16,17 @@ You and your enemy have taken your squabble to the wattage war room, and only th
 
 # How to Play
 
-The goal of **Wattage Warriors** is to light up all three of your green LEDs before your opponent does. This is accomplished primarily through button mashing. However, as the environment changes, indicated by the two middle LEDs, you must adjust your environment to match, both by ensuring your switch state stays the same, and that your color LED roughly matches the environment’s. In addition, there is a reset button.
-
-Insert video here
+The goal of **Wattage Warriors** is to light up all three of your green LEDs before your opponent does. This is accomplished primarily through button mashing. However, as the environment changes, indicated by the two middle LEDs, you must adjust your environment to match, both by ensuring your switch state stays the same, and that your color LED roughly matches the environment’s.
 
 # Design
 
 One fateful night, two budding warlords, Omega Smelter and Epsilon Smelter-Smelter, sat in the wattage war room and settled on a compromise. To put a stop to the needless post-apocalyptic bloodshed in the name of energy, a competition was schemed…
 
-When designing **Wattage Warlords**, we wanted to make a highly interactive, highly competitive game, and we thought the best way to start was with a good old-fashioned button masher. Output was a concern to us. We wanted an entirely closed system, and while we weren’t able to overcome the power source from a computer, we decided to challenge ourselves to make the only feedback be in the form of LEDs. Thinking some more, we wanted to find ways to make the button mashing more interesting—things that happen while you’re button mashing that require your attention. We designed an easier distraction—the switch, and a more difficult distraction—the joystick, which mapped to a color.
+When designing **Wattage Warlords**, we wanted to make a highly interactive, highly competitive game, and we thought the best way to start was with a good old-fashioned button masher. Output was a concern to us. We wanted an entirely closed system, and while we weren’t able to overcome the power source from a computer due to the constraints of the project, we decided to challenge ourselves to make the only feedback be in the form of LEDs. We additionally wanted to find ways to make the button mashing more interesting—things that happen while you’re button mashing that require your attention. We designed an easier distraction—the switch, and a more difficult distraction—the joystick, which mapped to a color.
 
-A player wins Wattage Warlords by filling three 64kWh batteries from the central power source before their opponent. A kWh of energy is harnessed by pressing the button. However, spamming the button is not a viable strategy. Every few seconds, the status of the orange “AC” LED toggles, shifting the energy source from DC to AC, then back to DC when the light toggles off again. If a player tries to harness energy while the source is on DC but they are on AC, they will damage their own equipment and lose 1 kWh from their battery.
+A player wins Wattage Warlords by filling three 64kWh batteries from the central power source before their opponent. A kWh of energy is harnessed by pressing the button. However, spamming the button alone is not a viable strategy. Every few seconds, the status of the orange “AC” LED toggles, shifting the energy source from DC to AC, then back to DC when the light toggles off again. If a player's equipment is not configured to harness the correct current source, spamming the button will do nothing
 
-Similarly, the power source temperature varies wildly throughout the game, indicated by a magenta LED in the center of the board. Players must match their battery temperature (indicated by their own magenta LED) to the power source’s temperature when harnessing energy from it, or risk damaging their equipment and losing 1 kWh from their battery. The heat source can be adjusted by moving the joystick to the right, and the coolant can be adjusted by moving the joystick up. In practice, this means that moving the joystick to the right increases the amount of red emitted while moving the joystick up increases the amount of blue emitted. The goal is to match the central LED in both red and blue emissions. An aside: we initially were going to do red/green, but decided to refrain from disadvantaging red/green colorblind warlords.
+Similarly, the power source temperature varies wildly throughout the game, indicated by a magenta LED in the center of the board which randomly changes color. Players must match their equipment (indicated by their own magenta LED) to the power source’s cooling and heating equipment when harnessing energy from it. The heat source can be adjusted by moving the joystick to the right, and the coolant can be adjusted by moving the joystick up. In practice, this means that moving the joystick to the right increases the amount of red emitted while moving the joystick up increases the amount of blue emitted. The goal is to match the central LED in both red and blue emissions. An aside: we initially were going to do red/green, but decided to refrain from disadvantaging red/green colorblind warlords.
 
 Three green LEDs / battery capacity for each player reveal the player’s battery capacity, where the first battery is fully charged before moving to the second.
 
@@ -50,7 +48,7 @@ Ultimately what made the code so difficult is that when debugging, we would have
 
 One takeaway from the code, and something that we only started to do partway through, was that object-oriented programming is actually really useful! If only we had started with it, then all of our edge cases and debugging of the two players could’ve been so much easier.
 
-Because of the many segmented aspects of the game, we were able to effectively divide up our work and 
+Because of the many segmented aspects of the game, we were able to effectively divide up our work.
 
 # Enclosure
 
