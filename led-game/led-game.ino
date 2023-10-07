@@ -91,12 +91,12 @@ int P1_RGB_B_val = 0;
 int P1_RGB_R_val = 0;
 int P2_RGB_B_val = 0;
 int P2_RGB_R_val = 0;
-int C_RGB_R_val = 255;
-int C_RGB_B_val = 255;
+int C_RGB_R_val = 0;
+int C_RGB_B_val = 0;
 unsigned long previousMillisRGB = 0;
 unsigned long previousMillisSwitch = 0;
-long interval_RGB = random(8000, 15001);  // Random interval between 8 and 15 seconds
-long interval_switch = random(8000, 15001);  // Random interval between 8 and 15 seconds
+long interval_RGB = random(10000, 16001);  // Random interval between 10 and 16 seconds
+long interval_switch = random(4000, 8001);  // Random interval between 4 and 8 seconds
 bool P1_RGB_matched = true;
 bool P2_RGB_matched = true;
 bool P1_W_matched = true;
@@ -283,12 +283,31 @@ void gameFinish(){
   free(pins);
 }
 
+void handleSwitch(int player){
+  int switch_pin = player == 1 ? P1_SWITCH : P2_SWITCH;
+  int switch_pin_val;
+
+  // Flips mode to input, reads the stte
+  pinMode(switch_pin , INPUT_PULLUP);
+  switch_pin_val = digitalRead(switch_pin); // Read the switch status
+
+  pinMode(switch_pin, OUTPUT);
+  digitalWrite(switch_pin, HIGH); // Turn on the LED
+
+  if (player == 1) {
+    P1_SWITCH_val = switch_pin_val;
+  }
+  else {
+    P2_SWITCH_val = switch_pin_val;
+  }
+}
+
 void handleJoystick(int player){
   static unsigned long lastUpdate1 = 0;
   static unsigned long lastUpdate2 = 0;
   unsigned long currentMillis = millis();
 
-  if (player == 1 && currentMillis - lastUpdate1 >= 10) { // Adjust delay as needed
+  if (player == 1 && currentMillis - lastUpdate1 >= 20) { // Adjust delay as needed
     int P1_VRX_val = analogRead(P1_VRX);
     int P1_VRY_val = analogRead(P1_VRY);
 
@@ -432,6 +451,10 @@ void setup() {
   pinMode(C_SWITCH, OUTPUT);
   analogWrite(C_RGB_R, C_RGB_R_val);
   analogWrite(C_RGB_B, C_RGB_B_val);
+  analogWrite(P1_RGB_R, P1_RGB_R_val);
+  analogWrite(P1_RGB_B, P1_RGB_B_val);
+  analogWrite(P2_RGB_R, P2_RGB_R_val);
+  analogWrite(P2_RGB_B, P2_RGB_B_val);
   digitalWrite(C_SWITCH, C_SWITCH_val);
 }
 
