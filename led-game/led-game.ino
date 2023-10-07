@@ -53,10 +53,13 @@ const int P1_BUTTON = 22;  // GPIO23
 const int P2_BUTTON = 23;  // GPIO22
 
 // Switches
-const int P1_SWITCH = 5;   // GPIO17 +20ohm
-const int P2_SWITCH = 16;  // GPIO16 + 20ohm
+const int P1_SWITCH = 19;
+const int P1_W = 5;
+const int P2_SWITCH = 17;  // GPIO16 + 20ohm // SWITCH NOW 21. USE 16 FOR OUTPUT
+const int P2_W = 16;
 const int C_SWITCH = 18;   // GPIO18 + 20ohm
-
+// 16,19 output
+// 5, 21 available
 // VRX and VRY for Joysticks
 // -VRX = deltaY
 // -VRY = deltaX
@@ -291,17 +294,18 @@ void gameFinish() {
 }
 
 void handleSwitch() {
-    pinMode(P1_SWITCH, INPUT_PULLUP);
     P1_SWITCH_val = digitalRead(P1_SWITCH);  // Read the switch status
-
-    pinMode(P1_SWITCH, OUTPUT);
-    digitalWrite(P1_SWITCH, HIGH);  // Turn on the LED
-
-    pinMode(P2_SWITCH, INPUT_PULLUP);
+    if (P1_SWITCH_val == HIGH){
+      digitalWrite(P1_W, LOW);
+    } else {
+      digitalWrite(P1_W, HIGH);
+    }
     P2_SWITCH_val = digitalRead(P2_SWITCH);  // Read the switch status
-
-    pinMode(P2_SWITCH, OUTPUT);
-    digitalWrite(P2_SWITCH, HIGH);  // Turn on the LED
+    if (P2_SWITCH_val == HIGH){
+      digitalWrite(P2_W, LOW);
+    } else {
+      digitalWrite(P2_W, HIGH);
+    }
 }
 
 void handleJoystick(int player) {
@@ -371,7 +375,7 @@ void randomActions() {
 
     // Update C_RGB_R_val
     int new_val = random(0, 256);
-    while (abs(new_val - C_RGB_R_val) < 50) {  // Ensure new value is sufficiently different
+    while (abs(new_val - C_RGB_R_val) < 100) {  // Ensure new value is sufficiently different
       new_val = random(0, 256);
     }
     C_RGB_R_val = new_val;
@@ -379,7 +383,7 @@ void randomActions() {
 
     // Update C_RGB_B_val
     new_val = random(0, 256);
-    while (abs(new_val - C_RGB_B_val) < 50) {  // Ensure new value is sufficiently different
+    while (abs(new_val - C_RGB_B_val) < 100) {  // Ensure new value is sufficiently different
       new_val = random(0, 256);
     }
     C_RGB_B_val = new_val;
@@ -400,19 +404,19 @@ void randomActions() {
 }
 
 void checkMatches() {
-  if (P1_SWITCH_val == C_SWITCH_val) {
+  if (P1_SWITCH_val != C_SWITCH_val) {
     P1_W_matched = true;
   } else {
     P1_W_matched = false;
   }
 
-  if (P2_SWITCH_val == C_SWITCH_val) {
+  if (P2_SWITCH_val != C_SWITCH_val) {
     P2_W_matched = true;
   } else {
     P2_W_matched = false;
   }
 
-  if (P1_RGB_R_val > (C_RGB_R_val + 49) || P1_RGB_R_val < (C_RGB_B_val - 49)) {
+  if (P1_RGB_R_val > (C_RGB_R_val + 63) || P1_RGB_R_val < (C_RGB_B_val - 63)) {
     P1_RGB_matched = false;
   } else {
     P1_RGB_matched = true;
@@ -425,7 +429,7 @@ void checkMatches() {
     P1_multiplier = 1;
   }
 
-  if (P2_RGB_R_val > (C_RGB_R_val + 49) || P2_RGB_R_val < (C_RGB_B_val - 49)) {
+  if (P2_RGB_R_val > (C_RGB_R_val + 63) || P2_RGB_R_val < (C_RGB_B_val - 63)) {
     P2_RGB_matched = false;
   } else {
     P2_RGB_matched = true;
@@ -445,6 +449,8 @@ void setup() {
 
   pinMode(P1_BUTTON, INPUT_PULLUP);
   pinMode(P2_BUTTON, INPUT_PULLUP);
+  pinMode(P1_SWITCH, INPUT_PULLUP);
+  pinMode(P2_SWITCH, INPUT_PULLUP);
 
   pinMode(P1_GREEN_1, OUTPUT);
   pinMode(P1_GREEN_2, OUTPUT);
@@ -460,6 +466,9 @@ void setup() {
   pinMode(P2_RGB_R, OUTPUT);
   pinMode(P2_RGB_B, OUTPUT);
 
+  pinMode(P1_W, OUTPUT);
+  pinMode(P2_W, OUTPUT);
+
   pinMode(C_SWITCH, OUTPUT);
 
   analogWrite(C_RGB_R, C_RGB_R_val);
@@ -469,6 +478,8 @@ void setup() {
   analogWrite(P2_RGB_R, P2_RGB_R_val);
   analogWrite(P2_RGB_B, P2_RGB_B_val);
   digitalWrite(C_SWITCH, C_SWITCH_val);
+
+  digitalWrite(P2_W, HIGH);
 }
 
 void loop() {
