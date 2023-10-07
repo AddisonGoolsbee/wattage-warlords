@@ -36,13 +36,9 @@ Three green LEDs / battery capacity for each player reveal the player’s batter
 
 The electronics for this thing were a nightmare
 
-![IMG_5217.HEIC](https://prod-files-secure.s3.us-west-2.amazonaws.com/386a96bb-f4fe-40e0-87d0-68ee4e7a7a06/54b885a4-f5be-4989-a050-5739bee67e7e/IMG_5217.heic)
-
-We used nearly every pin possible on the ESP32. We connected three RGB LEDs, 3 yellow LEDs, 6 green LEDs, 3 buttons, two switches, and 2 analog sticks, totaling to 26 separate pin connections after many optimizations. Many times we would find after an hour of debugging, that a certain GPIO pin didn’t actually support input, or that one pin’s output conflated another (particularly with the joysticks). Most wires had to go from female to male, which meant that we (since there weren’t any m-f wires in the CEID), had to combine f-f to m-m wires for most connections we made. Additionally, because **Wattage Warriors** is such a violent game, we had to make sure everything was secured, meaning many of our enormous number of connections had to be soldered. There has to be a better way to organize wires; we spent some time thinking about it but weren’t able to figure any system out. I wonder how on Earth one would deal with larger contraptions.
+We used nearly every pin possible on the ESP32. We connected three RGB LEDs, 3 yellow LEDs, 6 green LEDs, 3 buttons, two switches, and 2 analog sticks, totaling to 26 separate pin connections after many optimizations. Many times we would find after an hour of debugging, that a certain GPIO pin didn’t actually support input, or that one pin’s output conflated another (particularly with the joysticks). Most wires had to go from female to male, which meant that we (since there weren’t any m-f wires in the CEID), had to combine f-f to m-m wires for most connections we made. Additionally, because **Wattage Warlords** is such a violent game, we had to make sure everything was secured, meaning many of our enormous number of connections had to be soldered. There has to be a better way to organize wires; we spent some time thinking about it but weren’t able to figure any system out. I wonder how on Earth one would deal with larger contraptions.
 
 We made several iterations of diagrams to help us keep track of which pins connected to what, and how the circuit actually looked. This is the final version we created:
-
-![circuit_diagram.jpg](https://prod-files-secure.s3.us-west-2.amazonaws.com/386a96bb-f4fe-40e0-87d0-68ee4e7a7a06/f3a72182-5f68-47a8-b764-69619c4c8157/circuit_diagram.jpg)
 
 # Code
 
@@ -60,14 +56,10 @@ Because of the many segmented aspects of the game, we were able to effectively d
 
 Lesson #2: use cardboard
 
-![IMG_5219.HEIC](https://prod-files-secure.s3.us-west-2.amazonaws.com/386a96bb-f4fe-40e0-87d0-68ee4e7a7a06/090ad7d8-312f-4dd8-8bb0-9834ffa02513/IMG_5219.heic)
-
-![IMG_5218.HEIC](https://prod-files-secure.s3.us-west-2.amazonaws.com/386a96bb-f4fe-40e0-87d0-68ee4e7a7a06/da11f308-df24-418e-8595-dc50789f2c3c/IMG_5218.heic)
-
 Aside from the sheer volume of material and the constant unplugging of wires and breaking of pieces and failure of materials in the ceid, the hardest part of making the enclosure was getting all the buttons and lights out on the top of the enclosure, so stable that vigorous button mashing would not break the system. We settled on a haphazard system of drilling moles into the top of just the right size, cutting wood platforms, and hot gluing the wood platforms to the sensor and to the inner wall of the enclosure. Many failures later, and I mean ****many****, we finished. Even though the least happened with this part, this probably took the most time of any other section. The end result is a device that looks unbelievably clean, however. It really distinguishes the amature warlord from the experienced one
 
 # Conclusion
 
 The project took a total of around 20-25 hours, and that’s not including the fact that there were *two* of us. In hindsight, we now know that leaning so heavily on the hardware side is NOT the right choice to make if you think your time is valuable. We were plagued by constant hardware, software-hardware, and enclosure bugs, near-fatal catastrophes, and suffered too much head trauma from banging against walls and tables. One particular constraint we faced was that we approached the physical limit of how many inputs/outputs we had to the ESP32 board, such that we started having to use more and more questionable pins, and had to sacrifice features we wanted implemented.
 
-While we’re very happy with the result, if we were to start this project again, we would definitely choose something more on the software side of things. I personally cannot wait to challenge my friends to a fine gentlemanly game of **Wattage Warriors**, but at what cost?
+While we’re very happy with the result, if we were to start this project again, we would definitely choose something more on the software side of things. I personally cannot wait to challenge my friends to a fine gentlemanly game of **Wattage Warlords**, but at what cost?
