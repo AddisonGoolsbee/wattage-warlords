@@ -133,6 +133,9 @@ public:
     
     int now = esp_timer_get_time();
     if (currentState != lastFlickerableState) {
+      if (pin == P2_BUTTON) {
+
+      }
       lastDebounceTime = now;
       lastFlickerableState = currentState;
     }
@@ -218,7 +221,9 @@ void setCharge(int player) {
     animationStartTimeP2 = esp_timer_get_time();
   }
 
-  analogWrite(pin, 0);
+  if (player == 1 ? P1_multiplier : P2_multiplier) {
+    analogWrite(pin, 0);
+  }
 
   int fullScore = player == 1 ? scoreP1 : scoreP2;
   if (fullScore >= SCORE_MAX){
@@ -244,10 +249,14 @@ void flashLED(int player) {
   }
 }
 
-bool getDigitalInput(int pin, int player) {
-}
-
 void handleButton(){
+  if (buttonP2.debounce()) {
+    Serial.print("P2 button ");
+    Serial.println(scoreP2);
+    scoreP2 = max(scoreP2 + P2_multiplier, 0);
+    setCharge(2);
+  } 
+  
   if (buttonP1.debounce()) {
     Serial.print("P1 button ");
     Serial.println(scoreP1);
@@ -255,15 +264,14 @@ void handleButton(){
     setCharge(1);
   } 
 
-  if (buttonP2.debounce()) {
-    Serial.print("P2 button ");
-    Serial.println(scoreP2);
-    scoreP2 = max(scoreP2 + P2_multiplier, 0);
-    setCharge(2);
-  } 
+  if (P1_multiplier) {
+    flashLED(1);
+  }
 
-  flashLED(1);
-  flashLED(2);
+  if (P2_multiplier) {
+    flashLED(2);
+  }
+  
 }
 
 void gameFinish(){
@@ -352,8 +360,10 @@ void handleJoystick(int player){
 }
 
 
-void randomActions(unsigned long currentMillis){
-    if (currentMillis - previousMillisRGB >= interval_RGB) {
+void randomActions(){
+  unsigned long currentMillis = millis();
+
+  if (currentMillis - previousMillisRGB >= interval_RGB) {
     previousMillisRGB = currentMillis;
 
     // Update C_RGB_R_val
@@ -407,13 +417,9 @@ void checkMatches(){
     P1_RGB_matched = true;
   }
 
-  if (P1_W_matched == false && P1_RGB_matched == false) {
-    P1_multiplier = -2;
-  }
-  else if (P1_W_matched == false || P1_RGB_matched == false) {
-    P1_multiplier = -1;
-  }
-  else {
+  if (P1_W_matched == false || P1_RGB_matched == false) {
+    P1_multiplier = 0;
+  } else {
     P1_multiplier = 1;
   }
 
@@ -424,31 +430,36 @@ void checkMatches(){
     P2_RGB_matched = true;
   }
 
-  if (P2_W_matched == false && P2_RGB_matched == false) {
-    P2_multiplier = -2;
-  }
-  else if (P1_W_matched == false || P1_RGB_matched == false) {
-    P2_multiplier = -1;
-  }
-  else {
+  if (P2_W_matched == false || P2_RGB_matched == false) {
+    P2_multiplier = 0;
+  } else {
     P2_multiplier = 1;
   }
-  P1_multiplier = 1;
-  P2_multiplier = 1;
 }
 
 void setup() {
   Serial.begin(9600);
   Serial.println("Starting up...");
+
   pinMode(P1_BUTTON, INPUT_PULLUP);
+  pinMode(P2_BUTTON, INPUT_PULLUP);
+
   pinMode(P1_GREEN_1, OUTPUT);
   pinMode(P1_GREEN_2, OUTPUT);
-  pinMode(P1_GREEN_2, OUTPUT);
+  pinMode(P1_GREEN_3, OUTPUT);
+  pinMode(P2_GREEN_1, OUTPUT);
+  pinMode(P2_GREEN_2, OUTPUT);
+  pinMode(P2_GREEN_3, OUTPUT);
+
   pinMode(C_RGB_R, OUTPUT);
   pinMode(C_RGB_B, OUTPUT);
   pinMode(P1_RGB_R, OUTPUT);
   pinMode(P1_RGB_B, OUTPUT);
+  pinMode(P2_RGB_R, OUTPUT);
+  pinMode(P2_RGB_B, OUTPUT);
+
   pinMode(C_SWITCH, OUTPUT);
+
   analogWrite(C_RGB_R, C_RGB_R_val);
   analogWrite(C_RGB_B, C_RGB_B_val);
   analogWrite(P1_RGB_R, P1_RGB_R_val);
@@ -467,8 +478,7 @@ void loop() {
   handleJoystick(2);
   handleSwitch(1);
   handleSwitch(2);
-  unsigned long currentMillis = millis();
-  randomActions(currentMillis);
+  randomActions();
 
   if (winner) {
     gameFinish();
