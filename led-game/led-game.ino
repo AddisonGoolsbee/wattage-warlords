@@ -318,19 +318,23 @@ void handleJoystick(int player){
   if (player == 1 && currentMillis - lastUpdate1 >= 20) { // Adjust delay as needed
     int P1_VRX_val = analogRead(P1_VRX);
     int P1_VRY_val = analogRead(P1_VRY);
+    Serial.print(P1_VRX_val);
+    Serial.print(",");
+    Serial.print(P1_VRY_val);
+    Serial.print(",");
 
-    if (P1_RGB_B_val != 0 && P1_VRX_val == 4095) { 
+    if (P1_RGB_B_val != 0 && P1_VRX_val >= 400) { 
       P1_RGB_B_val -= 3;
       analogWrite(P1_RGB_B, P1_RGB_B_val);
-    } else if (P1_RGB_B_val != 255 && P1_VRX_val == 0) {
+    } else if (P1_RGB_B_val != 255 && P1_VRX_val <= 100) {
       P1_RGB_B_val += 3;
       analogWrite(P1_RGB_B, P1_RGB_B_val);
     }
 
-    if (P1_RGB_R_val != 0 && P1_VRY_val == 4095) { 
+    if (P1_RGB_R_val != 0 && P1_VRY_val >= 4000) { 
       P1_RGB_R_val -= 3;
       analogWrite(P1_RGB_R, P1_RGB_R_val);
-    } else if (P1_RGB_R_val != 255 && P1_VRY_val == 0) {
+    } else if (P1_RGB_R_val != 255 && P1_VRY_val <= 100) {
       P1_RGB_R_val += 3;
       analogWrite(P1_RGB_R, P1_RGB_R_val);
     }
@@ -340,18 +344,22 @@ void handleJoystick(int player){
     int P2_VRX_val = analogRead(P2_VRX);
     int P2_VRY_val = analogRead(P2_VRY);
 
-    if (P2_RGB_B_val != 0 && P2_VRX_val == 4095) { 
+    Serial.print(P2_VRX_val);
+    Serial.print(",");
+    Serial.println(P2_VRY_val);
+
+    if (P2_RGB_B_val != 0 && P2_VRX_val >= 4000) { 
       P2_RGB_B_val -= 3;
       analogWrite(P2_RGB_B, P2_RGB_B_val);
-    } else if (P2_RGB_B_val != 255 && P2_VRX_val == 0) {
+    } else if (P2_RGB_B_val != 255 && P2_VRX_val <= 100) {
       P2_RGB_B_val += 3;
       analogWrite(P2_RGB_B, P2_RGB_B_val);
     }
 
-    if (P2_RGB_R_val != 0 && P2_VRY_val == 4095) { 
+    if (P2_RGB_R_val != 0 && P2_VRY_val  >= 4000) { 
       P2_RGB_R_val -= 3;
       analogWrite(P2_RGB_R, P2_RGB_R_val);
-    } else if (P2_RGB_R_val != 255 && P2_VRY_val == 0) {
+    } else if (P2_RGB_R_val != 255 && P2_VRY_val <= 100) {
       P2_RGB_R_val += 3;
       analogWrite(P2_RGB_R, P2_RGB_R_val);
     }
@@ -386,6 +394,7 @@ void randomActions(){
   }
 
   if (currentMillis - previousMillisSwitch >= interval_switch) {
+    previousMillisSwitch = currentMillis;
     if (C_SWITCH_val == LOW) {
       C_SWITCH_val = HIGH;
     } else {
